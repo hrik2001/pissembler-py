@@ -17,7 +17,7 @@ class Token(BaseModel):
 class LexerEdge(BaseModel):
     value: Optional[str]
     is_start: bool = False
-    t_type: token_type = None # will contain a value only when is_end = True
+    t_type: Optional[token_type] = None # will contain a value only when is_end = True
     next_edges: List["LexerEdge"] = []
 
 class Lexer:
