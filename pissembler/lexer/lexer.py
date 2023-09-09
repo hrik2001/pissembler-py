@@ -74,9 +74,6 @@ class Lexer:
                     change = True
                     break
             if is_end and (not character.isspace()):
-                # if operand["value"] is not None:
-                    # result.append(Token(t_type=operand["type"], value=operand["value"]))
-                    # break
                 result.append(Token(t_type=curr.t_type))
                 curr = self.state
 
@@ -88,7 +85,10 @@ class Lexer:
                     if bool(match_object) and match_object.span()[0] == 0:
                         possibilities.append([literal_type, match_object.span()[1], match_object.group()])
                 possibilities = sorted(possibilities, key=(lambda x: x[1]))[::-1]
-                result.append(Token(t_type=possibilities[0][0], value=possibilities[0][2]))
+                try:
+                    result.append(Token(t_type=possibilities[0][0], value=possibilities[0][2]))
+                except IndexError:
+                    raise Exception(f"No valid token find at position {index+1}")
                 index += possibilities[0][1]
                 change = True
 
