@@ -2,27 +2,21 @@ from enum import Enum, auto
 from typing import List, Optional
 from pydantic import BaseModel
 import re
-
-class token_type(Enum):
-    PUSH1 = auto()
-    PUSH2 = auto()
-    MSTORE = auto()
-    RETURN = auto()
-    HEX_LITERAL = auto()
-    DECIMAL_LITERAL = auto()
+from pissembler.lexer.grammar import pissembler_token_type
 
 class Token(BaseModel):
-    t_type: token_type
+    t_type: pissembler_token_type
     value: Optional[str] = None
 
 class LexerEdge(BaseModel):
     value: Optional[str]
     is_start: bool = False
-    t_type: Optional[token_type] = None # will contain a value only when is_end = True
+    # t_type: Optional[token_type] = None # will contain a value only when is_end = True
+    t_type: Optional[pissembler_token_type] = None # will contain a value only when is_end = True
     next_edges: List["LexerEdge"] = []
 
 class Lexer:
-    def __init__(self, instructions):
+    def __init__(self, instructions, literal_rules):
         '''
         instructions contain any instruction that is not hex or decimal
         it's a list of ["INSTRUCTION", token_type.INSTRUCTION]
@@ -31,6 +25,7 @@ class Lexer:
         Here in intialization we build the state machine :)
         '''
         self.state = LexerEdge(value=None, is_start=True)
+        self.literal_rules = literal_rules
         for instruction, instruction_enum in instructions:
             curr = self.state
             length = len(instruction)
@@ -53,10 +48,11 @@ class Lexer:
         result = []
         length = len(text)
         operand = {"value": None, "type": None}
-        literal_rules = {
-            token_type.DECIMAL_LITERAL: re.compile(r"[0-9]+"),
-            token_type.HEX_LITERAL: re.compile(r"0x(([0-9])|([A-Z])|([a-z]))+")
-        }
+        # literal_rules = {
+            # token_type.DECIMAL_LITERAL: re.compile(r"[0-9]+"),
+            # token_type.HEX_LITERAL: re.compile(r"0x(([0-9])|([A-Z])|([a-z]))+")
+        # }
+        literal_rules = self.literal_rules
         index = 0
         # for index, character in enumerate(text):
         while index < length:
