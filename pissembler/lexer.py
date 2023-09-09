@@ -76,12 +76,14 @@ class Lexer:
                     operand = {"value": None, "type": None}
                 index += 1
                 continue
+
             if operand["value"] is not None:
                 if bool(literal_rules[operand["type"]].match(character)):
                     operand["value"] += character
                     change = True
                 else:
                     raise Exception(f"Unidentified literal rule at position {index+1}")
+
             for edge in curr.next_edges:
                 if edge.value == character:
                     curr = edge
@@ -93,6 +95,10 @@ class Lexer:
                     break
                 result.append(Token(t_type=curr.t_type))
                 curr = self.state
+
+            # Code for identifying when literal is starting
+            # I really don't like this code, since it's not general enough
+            # Only coded for this purpose itself. Maybe I will change it later
             if not change and operand["value"] is None:
                 if character == "0" and text[index+1]:
                     operand["value"] = "0x"
