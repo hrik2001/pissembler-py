@@ -1,7 +1,14 @@
-from pissembler.lexer import Lexer, token_type
+from pissembler.lexer.lexer import Lexer, token_type
 
 def main():
-    lexer = Lexer([["PUSH1", token_type.PUSH1],["PUSH2", token_type.PUSH2], ["MSTORE", token_type.MSTORE], ["RETURN", token_type.RETURN]])
+    lexer = Lexer(
+        [
+            ["PUSH1", token_type.PUSH1],
+            ["PUSH2", token_type.PUSH2],
+            ["MSTORE", token_type.MSTORE],
+            ["RETURN", token_type.RETURN]
+        ]
+    )
     print(lexer.lex(input()))
 
 main()

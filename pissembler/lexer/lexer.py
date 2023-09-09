@@ -40,13 +40,11 @@ class Lexer:
                 for edge in curr.next_edges:
                     if edge.value == character:
                         curr = edge
-                        # print(character)
                         skip = True
                         break
                 if skip:
                     continue
                 next_edge = LexerEdge(value=character, t_type=(instruction_enum if is_end else None))
-                # print(f"{character} (created)")
                 curr.next_edges.append(next_edge)
                 curr = next_edge
 
@@ -56,8 +54,8 @@ class Lexer:
         length = len(text)
         operand = {"value": None, "type": None}
         literal_rules = {
-            token_type.DECIMAL_LITERAL: re.compile(r"[0-9]"),
-            token_type.HEX_LITERAL: re.compile(r"([0-9])|([A-Z])|([a-z])")
+            token_type.DECIMAL_LITERAL: re.compile(r"[0-9]+"),
+            token_type.HEX_LITERAL: re.compile(r"0x(([0-9])|([A-Z])|([a-z]))+")
         }
         index = 0
         # for index, character in enumerate(text):
@@ -71,18 +69,8 @@ class Lexer:
                         raise Exception(f"Incomplete symbol at position {index+1}")
                     result.append(Token(t_type=curr.t_type))
                     curr = self.state
-                elif operand["value"] is not None:
-                    result.append(Token(t_type=operand["type"], value=operand["value"]))
-                    operand = {"value": None, "type": None}
                 index += 1
                 continue
-
-            if operand["value"] is not None:
-                if bool(literal_rules[operand["type"]].match(character)):
-                    operand["value"] += character
-                    change = True
-                else:
-                    raise Exception(f"Unidentified literal rule at position {index+1}")
 
             for edge in curr.next_edges:
                 if edge.value == character:
@@ -90,25 +78,24 @@ class Lexer:
                     change = True
                     break
             if is_end and (not character.isspace()):
-                if operand["value"] is not None:
-                    result.append(Token(t_type=operand["type"], value=operand["value"]))
-                    break
+                # if operand["value"] is not None:
+                    # result.append(Token(t_type=operand["type"], value=operand["value"]))
+                    # break
                 result.append(Token(t_type=curr.t_type))
                 curr = self.state
 
-            # Code for identifying when literal is starting
-            # I really don't like this code, since it's not general enough
-            # Only coded for this purpose itself. Maybe I will change it later
-            if not change and operand["value"] is None:
-                if character == "0" and text[index+1]:
-                    operand["value"] = "0x"
-                    operand["type"] = token_type.HEX_LITERAL
-                    index += 1
-                    change = True
-                elif character.isdigit():
-                    operand["value"] = character
-                    operand["type"] = token_type.DECIMAL_LITERAL
-                    change = True
+            if not change:
+                rest = text[index:]
+                possibilities = []
+                for literal_type in literal_rules.keys():
+                    match_object = literal_rules[literal_type].match(rest)
+                    if bool(match_object) and match_object.span()[0] == 0:
+                        possibilities.append([literal_type, match_object.span()[1], match_object.group()])
+                possibilities = sorted(possibilities, key=(lambda x: x[1]))[::-1]
+                result.append(Token(t_type=possibilities[0][0], value=possibilities[0][2]))
+                index += possibilities[0][1]
+                change = True
+
 
             if not change:
                 raise Exception(f"Unsupported symbol probably at position {index+1}")
