@@ -11,7 +11,6 @@ class Token(BaseModel):
 class LexerEdge(BaseModel):
     value: Optional[str]
     is_start: bool = False
-    # t_type: Optional[token_type] = None # will contain a value only when is_end = True
     t_type: Optional[pissembler_token_type] = None # will contain a value only when is_end = True
     next_edges: List["LexerEdge"] = []
 
@@ -47,14 +46,9 @@ class Lexer:
         curr = self.state
         result = []
         length = len(text)
-        operand = {"value": None, "type": None}
-        # literal_rules = {
-            # token_type.DECIMAL_LITERAL: re.compile(r"[0-9]+"),
-            # token_type.HEX_LITERAL: re.compile(r"0x(([0-9])|([A-Z])|([a-z]))+")
-        # }
         literal_rules = self.literal_rules
         index = 0
-        # for index, character in enumerate(text):
+
         while index < length:
             character = text[index]
             change = False
@@ -83,15 +77,10 @@ class Lexer:
                 for literal_type in literal_rules.keys():
                     match_object = literal_rules[literal_type].match(rest)
                     if bool(match_object) and match_object.span()[0] == 0:
-                        possibilities.append([literal_type, match_object.span()[1], match_object.group()])
-                possibilities = sorted(possibilities, key=(lambda x: x[1]))[::-1]
-                try:
-                    result.append(Token(t_type=possibilities[0][0], value=possibilities[0][2]))
-                except IndexError:
-                    raise Exception(f"No valid token find at position {index+1}")
-                index += possibilities[0][1]
-                change = True
-
+                        result.append(Token(t_type=literal_type, value=match_object.group()))
+                        index += match_object.span()[1]
+                        change = True
+                        break
 
             if not change:
                 raise Exception(f"Unsupported symbol probably at position {index+1}")
