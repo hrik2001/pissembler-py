@@ -2,7 +2,6 @@
 Here, grammar of the pissembler language is defined
 '''
 
-# from pissembler.lexer import token_type
 from enum import Enum, auto
 import re
 
@@ -21,8 +20,10 @@ instructions = [
     ["RETURN", pissembler_token_type.RETURN]
 ]
 
-
+'''
+Order of precedence is applicable here
+'''
 literal_rules = {
+    pissembler_token_type.HEX_LITERAL: re.compile(r"0x(([0-9])|([A-Z])|([a-z]))+"),
     pissembler_token_type.DECIMAL_LITERAL: re.compile(r"[0-9]+"),
-    pissembler_token_type.HEX_LITERAL: re.compile(r"0x(([0-9])|([A-Z])|([a-z]))+")
 }
